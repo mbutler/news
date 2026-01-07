@@ -1,0 +1,17 @@
+# Environment and secrets
+.env
+
+# Logs
+*.log
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
