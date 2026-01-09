@@ -92,19 +92,40 @@ fi
 
 # Cron setup
 echo ""
+echo "─── Cron Setup ───"
+echo ""
+
+CRON_INGEST="*/15 * * * * cd $SCRIPT_DIR && php cron_ingest.php >> /var/log/news_ingest.log 2>&1"
+CRON_CLASSIFY="0 * * * * cd $SCRIPT_DIR && php cron_classify_rewrite.php >> /var/log/news_classify.log 2>&1"
+
+# Check if cron jobs already exist
+EXISTING_CRON=$(crontab -l 2>/dev/null || echo "")
+
+if echo "$EXISTING_CRON" | grep -q "cron_ingest.php"; then
+  echo -e "${GREEN}✓${NC} Cron jobs already installed"
+else
+  read -p "Install cron jobs automatically? (Y/n): " INSTALL_CRON
+  if [[ ! "$INSTALL_CRON" =~ ^[Nn]$ ]]; then
+    # Add cron jobs
+    (echo "$EXISTING_CRON"; echo ""; echo "# News feed - ingest every 15 min"; echo "$CRON_INGEST"; echo "# News feed - classify every hour"; echo "$CRON_CLASSIFY") | crontab -
+    echo -e "${GREEN}✓${NC} Cron jobs installed"
+    echo ""
+    echo "Installed:"
+    echo "  - Ingest every 15 minutes"
+    echo "  - Classify every hour"
+  else
+    echo ""
+    echo "To install manually, run: crontab -e"
+    echo "Then add:"
+    echo -e "${YELLOW}$CRON_INGEST${NC}"
+    echo -e "${YELLOW}$CRON_CLASSIFY${NC}"
+  fi
+fi
+
+echo ""
 echo "╔════════════════════════════════════════╗"
 echo "║           Setup Complete!              ║"
 echo "╚════════════════════════════════════════╝"
-echo ""
-echo "─── Cron Setup ───"
-echo ""
-echo "Add these to your crontab (crontab -e):"
-echo ""
-echo -e "${YELLOW}# Ingest new articles every 15 minutes${NC}"
-echo "*/15 * * * * cd $SCRIPT_DIR && php cron_ingest.php >> /var/log/news_ingest.log 2>&1"
-echo ""
-echo -e "${YELLOW}# Classify and rewrite every hour${NC}"
-echo "0 * * * * cd $SCRIPT_DIR && php cron_classify_rewrite.php >> /var/log/news_classify.log 2>&1"
 echo ""
 echo "─── Web Server ───"
 echo ""
